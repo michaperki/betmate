@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # Existing services from main docker-compose.yml remain unchanged
+  
+  bot-worker:
+    build:
+      context: ./bot-worker
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - REDIS_WAGER_CHANNEL=wager_events
+      - BOT_API_URL=http://backend:3000/internal/bot_wager
+      - BOT_API_KEY=${BOT_API_KEY}
+      - ENABLE_HOUSE_BOT=${ENABLE_HOUSE_BOT:-true}
+      - BOT_BANKROLL=${BOT_BANKROLL:-100}
+      - MAX_POT_PERCENTAGE=${MAX_POT_PERCENTAGE:-25}
+      - DB_HOST=postgres
+      - DB_USER=${BOT_DB_USER:-bot_readonly}
+      - DB_PASSWORD=${BOT_DB_PASSWORD}
+      - DB_NAME=${DB_NAME:-betmate}
+      - DB_PORT=5432
+      - MICROSERVICE_URL=http://microservice:4000/top_moves
+      - LOG_LEVEL=${BOT_LOG_LEVEL:-info}
+    depends_on:
+      - redis
+      - backend
+      - postgres
+      - microservice
+    volumes:
+      - ./bot-worker/logs:/app/logs
+    networks:
+      - betmate-network

@@ -1,0 +1,33 @@
+# Ignore editor-specific claude settings everywhere
+**/.claude/settings.local.json
+
+# Node/NPM artifacts
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+*/dist/
+build/
+*/build/
+
+# Logs and runtime traces
+*.log
+logs/
+*.pid
+
+# Environment files
+.env
+.env.*
+
+# Coverage and test artifacts
+coverage/
+*/coverage/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Docker junk
+docker-data/
+*.local.yaml
