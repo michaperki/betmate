@@ -16,7 +16,15 @@
     "release:frontend": "bash scripts/release-frontend.sh",
     "release:frontend:patch": "bash scripts/release-frontend.sh patch",
     "release:frontend:minor": "bash scripts/release-frontend.sh minor",
-    "release:frontend:major": "bash scripts/release-frontend.sh major"
+    "release:frontend:major": "bash scripts/release-frontend.sh major",
+    "release:backend": "bash scripts/release-backend.sh",
+    "release:backend:patch": "bash scripts/release-backend.sh patch",
+    "release:backend:minor": "bash scripts/release-backend.sh minor",
+    "release:backend:major": "bash scripts/release-backend.sh major",
+    "release:app": "bash scripts/release-app.sh",
+    "release:app:patch": "bash scripts/release-app.sh patch",
+    "release:app:minor": "bash scripts/release-app.sh minor",
+    "release:app:major": "bash scripts/release-app.sh major"
   },
   "keywords": [],
   "author": "",
