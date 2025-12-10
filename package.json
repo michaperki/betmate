@@ -13,6 +13,7 @@
     "micro:build": "cd microservice && docker compose build",
     "micro:build:clean": "cd microservice && docker compose build --no-cache",
     "status": "node scripts/status.js",
+    "mock:deposit": "node scripts/mock-nowpayments.js",
     "release:frontend": "bash scripts/release-frontend.sh",
     "release:frontend:patch": "bash scripts/release-frontend.sh patch",
     "release:frontend:minor": "bash scripts/release-frontend.sh minor",
