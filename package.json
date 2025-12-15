@@ -25,7 +25,8 @@
     "release:app": "bash scripts/release-app.sh",
     "release:app:patch": "bash scripts/release-app.sh patch",
     "release:app:minor": "bash scripts/release-app.sh minor",
-    "release:app:major": "bash scripts/release-app.sh major"
+    "release:app:major": "bash scripts/release-app.sh major",
+    "git:status": "bash scripts/git-tree-status.sh"
   },
   "keywords": [],
   "author": "",

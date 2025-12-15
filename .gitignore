@@ -39,7 +39,8 @@ lc0/
 bot-worker/
 
 # Local helper scripts and experiments
-scripts/
+scripts/**
+!scripts/git-tree-status.sh
 
 # Temporary or scratch files
 tmp_style.scss
