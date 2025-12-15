@@ -9,3 +9,4 @@
 [submodule "microservice"]
   path = microservice
   url = git@github.com:michaperki/betmate-model-microservice.git
+  ignore = dirty
