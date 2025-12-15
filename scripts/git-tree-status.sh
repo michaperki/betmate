@@ -10,6 +10,14 @@ green() { printf "\033[32m%s\033[0m" "$*"; }
 yellow() { printf "\033[33m%s\033[0m" "$*"; }
 red() { printf "\033[31m%s\033[0m" "$*"; }
 
+clean_status_raw() {
+  if [ -z "$(git status --porcelain 2>/dev/null)" ]; then
+    echo CLEAN
+  else
+    echo DIRTY
+  fi
+}
+
 ahead_behind() {
   local upstream
   if ! upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null); then
@@ -57,6 +65,11 @@ print_section() {
     echo "  $(pointer_status "$path")"
   fi
 
+  ignore_flag=""
+  if [ "$path" != "." ]; then
+    ignore_flag=$(git config --file .gitmodules --get "submodule.${label}.ignore" 2>/dev/null || true)
+  fi
+
   ( cd "$path" >/dev/null 2>&1
     local branch
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "(detached)")
@@ -67,7 +80,16 @@ print_section() {
     echo "  repo: $remote"
     echo "  branch: $branch"
     echo "  $(ahead_behind)"
-    echo "  status: $(clean_status)"
+    raw=$(clean_status_raw)
+    if [ "$raw" = CLEAN ]; then
+      echo "  status: $(green OK)"
+    else
+      if [ "$ignore_flag" = dirty ]; then
+        echo "  status: $(green 'OK (ignored)')"
+      else
+        echo "  status: $(red DIRTY)"
+      fi
+    fi
     echo "  head: $commit"
   )
   echo
