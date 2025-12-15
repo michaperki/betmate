@@ -86,4 +86,5 @@ if [ -f .gitmodules ]; then
       done
 fi
 
-echo "$(dim "Tip: 'pointer: UPDATED' means the submodule HEAD has advanced;\ncommit the new pointer in the root repo to clear it.")"
+echo "$(dim "Tip: 'pointer: UPDATED' means the submodule HEAD has advanced.")"
+echo "$(dim "Commit the new pointer in the root repo to clear it.")"
