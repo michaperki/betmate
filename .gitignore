@@ -31,3 +31,19 @@ Thumbs.db
 # Docker junk
 docker-data/
 *.local.yaml
+
+# Local research, dumps, engines, and utilities (not for version control)
+context-dumps/
+research/
+lc0/
+bot-worker/
+
+# Local helper scripts and experiments
+scripts/
+
+# Temporary or scratch files
+tmp_style.scss
+TEST_ADD.txt
+
+# Loose local markdown notes not intended for version control
+CURRENCIES.md
