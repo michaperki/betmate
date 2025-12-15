@@ -26,7 +26,10 @@
     "release:app:patch": "bash scripts/release-app.sh patch",
     "release:app:minor": "bash scripts/release-app.sh minor",
     "release:app:major": "bash scripts/release-app.sh major",
-    "git:status": "bash scripts/git-tree-status.sh"
+    "git:status": "bash scripts/git-tree-status.sh",
+    "git:submodules:init": "git submodule update --init --recursive",
+    "git:submodules:sync": "git submodule sync --recursive && git submodule update --init --recursive",
+    "git:submodules:status": "git submodule status --recursive"
   },
   "keywords": [],
   "author": "",
