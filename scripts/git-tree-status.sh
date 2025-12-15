@@ -25,10 +25,66 @@ ahead_behind() {
     return 0
   fi
   local counts
-  counts=$(git rev-list --left-right --count "${upstream}...HEAD" 2>/dev/null || echo "0\t0")
-  local behind=${counts%%\t*}
-  local ahead=${counts##*\t}
+  counts=$(git rev-list --left-right --count "${upstream}...HEAD" 2>/dev/null || echo "0 0")
+  local behind ahead
+  read -r behind ahead <<< "$counts"
   echo "upstream: ${upstream}, ahead: ${ahead}, behind: ${behind}"
+}
+
+# Compare current HEAD against a provided ref (e.g., origin/release)
+# Prints: "prod: <ref>, ahead: X, behind: Y"
+ahead_behind_vs() {
+  local target_ref=$1
+  if [ -z "$target_ref" ]; then
+    echo "prod: none"
+    return 0
+  fi
+  # If given a remote ref like origin/release, verify refs/remotes/origin/release
+  if [[ "$target_ref" == origin/* ]]; then
+    if ! git show-ref --verify --quiet "refs/remotes/${target_ref}"; then
+      echo "prod: $target_ref (not found)"
+      return 0
+    fi
+  else
+    if ! git show-ref --verify --quiet "$target_ref"; then
+      echo "prod: $target_ref (not found)"
+      return 0
+    fi
+  fi
+  local counts
+  counts=$(git rev-list --left-right --count "${target_ref}...HEAD" 2>/dev/null || echo "0 0")
+  local behind ahead
+  read -r behind ahead <<< "$counts"
+  echo "prod: ${target_ref}, ahead: ${ahead}, behind: ${behind}"
+}
+
+# Resolve which branch should be considered "prod"
+# Priority: $BETMATE_PROD_BRANCH (exact remote name OK), then origin/release, origin/prod, origin/main, origin/master
+resolve_prod_ref() {
+  local override=${BETMATE_PROD_BRANCH:-}
+  if [ -n "$override" ]; then
+    # Accept values like 'release' or 'origin/release'
+    if [[ "$override" == origin/* ]]; then
+      echo "$override"
+      return 0
+    else
+      echo "origin/$override"
+      return 0
+    fi
+  fi
+  local candidates=(
+    "origin/release"
+    "origin/prod"
+    "origin/main"
+    "origin/master"
+  )
+  for ref in "${candidates[@]}"; do
+    if git show-ref --verify --quiet "refs/remotes/${ref}"; then
+      echo "$ref"
+      return 0
+    fi
+  done
+  echo "" # none found
 }
 
 clean_status() {
@@ -80,6 +136,11 @@ print_section() {
     echo "  repo: $remote"
     echo "  branch: $branch"
     echo "  $(ahead_behind)"
+    local prod_ref
+    prod_ref=$(resolve_prod_ref)
+    if [ -n "$prod_ref" ]; then
+      echo "  $(ahead_behind_vs "$prod_ref")"
+    fi
     raw=$(clean_status_raw)
     if [ "$raw" = CLEAN ]; then
       echo "  status: $(green OK)"
@@ -110,3 +171,4 @@ fi
 
 echo "$(dim "Tip: 'pointer: UPDATED' means the submodule HEAD has advanced.")"
 echo "$(dim "Commit the new pointer in the root repo to clear it.")"
+echo "$(dim "Set BETMATE_PROD_BRANCH to override prod (default: origin/release).")"
