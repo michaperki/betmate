@@ -10,6 +10,7 @@ How Admin Is Gated (backend)
 - Routers:
   - `/admin/*` (risk/exposure/config) uses `requireAdminAccess`.
   - Some `/billing/*` ops use `requireAdminKey`.
+  - Faucet: `/billing/faucet` requires auth and, in non‑dev envs, an admin key by default. You can disable the key requirement by setting `FAUCET_REQUIRE_ADMIN_KEY=false` (recommended only for staging). The faucet is additionally gated by the DB `enableFaucet` flag.
 
 Recommended Policy by Environment
 - Development (local):
@@ -18,6 +19,7 @@ Recommended Policy by Environment
 - Staging (prod-like):
   - Do NOT set `ADMIN_API_KEY` (keeps staging behavior aligned with prod). Do NOT set `FAUCET_ADMIN_KEY` in the frontend.
   - Promote specific users to `role='admin'` using the promote script below; they access admin routes via JWT only.
+  - If you need the faucet without shipping an admin key to the browser: enable it in the Admin panel (Features → enableFaucet) and set `FAUCET_REQUIRE_ADMIN_KEY=false` on the backend app. Leaving it unset defaults to requiring the admin key.
 - Production:
   - Do NOT set `ADMIN_API_KEY`. Rely solely on JWT `role='admin'`.
 
@@ -72,4 +74,3 @@ References
 - Promote script and task:
   - `backend/scripts/promote-admin.ts`
   - `backend/package.json` (script: `promote-admin`)
-
