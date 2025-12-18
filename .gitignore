@@ -42,6 +42,7 @@ bot-worker/
 # Local helper scripts and experiments
 scripts/**
 !scripts/git-tree-status.sh
+!scripts/sync-release-to-dev.sh
 
 # Temporary or scratch files
 tmp_style.scss
