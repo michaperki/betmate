@@ -1,0 +1,14 @@
+{
+  "name": "betmate-e2e",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "postinstall": "npx playwright install",
+    "test": "playwright test",
+    "codegen": "playwright codegen ${E2E_BASE_URL:-http://localhost:8080}"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "typescript": "^5.6.3"
+  }
+}
