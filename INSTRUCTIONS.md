@@ -79,6 +79,18 @@ Recent Context (Highly Recommended Reads)
 - Batch analysis + cooldown unification: `context-dumps/2025-12-09_batch-analysis-unification.md`
 - Prod UI/auth/leaderboard hotfixes: `context-dumps/2025-12-09_prod-game-ui-hotfix.md`
 
+Admin Access — Promote a User
+- Quick command (run from repo root):
+  - Ensure Mongo is reachable. For local docker-compose, set `backend/.env.local` with `MONGODB_URI=mongodb://localhost:27017/betmate`.
+  - Promote to admin:
+    - `npm run admin:promote -- --email "you@example.com" --role admin --yes`
+  - Demote to user:
+    - `npm run admin:promote -- --email "you@example.com" --role user --yes`
+- Notes
+  - The script loads `backend/.env.local` first, then `backend/.env` (same as the server).
+  - For SRV clusters, export `MONGODB_URI`, `MONGODB_USERNAME`, `MONGODB_PASSWORD` in your shell, then run the command.
+  - Admin UI routes also require the user’s role to be `admin`. As an ops fallback for API-only access, set `ADMIN_API_KEY` and pass `X-Admin-Key`, but the FE still checks `user.role`.
+
 Dev Simulator (Deterministic Streams)
 - Endpoints (NODE_ENV!=production; gated by `DEV_SIMULATOR`, default true):
   - `POST /admin/dev/advance-move` — Body: `{ game_id, san, white_time?, black_time? }`
