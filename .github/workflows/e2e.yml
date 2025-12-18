@@ -1,0 +1,58 @@
+name: E2E Tests
+
+on:
+  pull_request:
+  push:
+    branches: [ main, dev ]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install root deps
+        run: |
+          npm ci || npm install
+
+      - name: Install E2E deps and browsers
+        working-directory: e2e
+        run: |
+          npm ci || npm install
+          npx playwright install --with-deps
+
+      - name: Start stack via Docker Compose
+        env:
+          NODE_ENV: development
+        run: |
+          docker-compose up -d
+          echo "Waiting for backend to respond..."
+          for i in {1..60}; do
+            if curl -sSf http://localhost:9000/ >/dev/null; then echo OK; break; fi; sleep 2; done
+
+      - name: Run E2E tests (non-headed)
+        env:
+          E2E_BACKEND_URL: http://localhost:9000
+          DEV_WEBHOOK_KEY: test-dev-webhook-key
+          ADMIN_API_KEY: dev-admin-key
+          DEV_SIMULATOR: true
+        working-directory: e2e
+        run: |
+          npx playwright test -c playwright.config.ts --reporter=list
+
+      - name: Upload Playwright artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-artifacts
+          path: |
+            e2e/test-results
+            e2e/playwright-report
+
