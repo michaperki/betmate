@@ -45,7 +45,7 @@ What Each Script Does
   - Performs both frontend and backend steps together and creates a combined root tag `app-vX.Y.Z+A.B.C`.
 
 Publishing
-After running a release script, push tags and branches to your remotes:
+These scripts never push for you; pushing is a manual, human step (team policy). After running a release script, push tags and branches yourself:
 
 ```
 git -C frontend push --follow-tags origin release
@@ -54,17 +54,28 @@ git push --follow-tags origin release
 ```
 
 Keep Dev In Sync (recommended)
-To avoid `dev` showing “behind” due to release-only version/tag bumps, merge `release` back into `dev` after publishing:
+To avoid `dev` showing “behind” due to release-only version/tag bumps, merge `release` back into `dev` after publishing. You can either run the helper script or do it manually.
+
+Option A — helper script (no push):
 
 ```
-# Submodules
-git -C frontend checkout dev && git -C frontend fetch origin && git -C frontend merge --no-ff origin/release && git -C frontend push origin dev
-git -C backend  checkout dev && git -C backend  fetch origin && git -C backend  merge --no-ff origin/release && git -C backend  push origin dev
+bash scripts/sync-release-to-dev.sh --fetch
+# Then push manually (if desired):
+# git -C frontend push origin dev
+# git -C backend  push origin dev
+# git push origin dev
+```
 
-# Root: update submodule pointers on dev
+Option B — manual commands:
+
+```
+# Submodules (no push here; push later if you want)
+git -C frontend checkout dev && git -C frontend fetch origin && git -C frontend merge --no-ff origin/release
+git -C backend  checkout dev && git -C backend  fetch origin && git -C backend  merge --no-ff origin/release
+
+# Root: update submodule pointers on dev (no push)
 git add frontend backend
 git commit -m "chore(submodules): merge release->dev and update pointers"
-git push origin dev
 ```
 
 Version Display in UI (Frontend)
