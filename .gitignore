@@ -23,6 +23,7 @@ logs/
 # Coverage and test artifacts
 coverage/
 */coverage/
+test-results/
 
 # OS metadata
 .DS_Store

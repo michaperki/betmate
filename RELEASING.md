@@ -53,6 +53,20 @@ git -C backend  push --follow-tags origin release
 git push --follow-tags origin release
 ```
 
+Keep Dev In Sync (recommended)
+To avoid `dev` showing “behind” due to release-only version/tag bumps, merge `release` back into `dev` after publishing:
+
+```
+# Submodules
+git -C frontend checkout dev && git -C frontend fetch origin && git -C frontend merge --no-ff origin/release && git -C frontend push origin dev
+git -C backend  checkout dev && git -C backend  fetch origin && git -C backend  merge --no-ff origin/release && git -C backend  push origin dev
+
+# Root: update submodule pointers on dev
+git add frontend backend
+git commit -m "chore(submodules): merge release->dev and update pointers"
+git push origin dev
+```
+
 Version Display in UI (Frontend)
 - The UI component `frontend/src/components/VersionTag.tsx` reads `versionLabel` from `frontend/src/version.ts`.
 - `version.ts` builds a label using `npm_package_version` and environment (adds “(dev)” in development).
@@ -61,4 +75,3 @@ Version Display in UI (Frontend)
 Notes
 - Scripts require a clean working tree in the target submodule to avoid mixing unrelated changes with a release.
 - If you need to release from a specific commit on `dev`, cherry-pick to `release` first, then run the script.
-
