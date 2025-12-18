@@ -46,6 +46,15 @@ services:
       - MONGODB_URI=mongodb://mongo:27017/betmate
       - MICROSERVICE_URL=http://microservice:8000/dev
       - MICROSERVICE_API_KEY=local-microservice-key
+      # Enable Real mode + faucet for local E2E/dev
+      - FEATURE_REAL_MODE=true
+      - ENABLE_FAUCET=true
+      # Allow faucet without admin key in local/dev (never use in prod)
+      - FAUCET_REQUIRE_ADMIN_KEY=false
+      # Optional: admin key for admin endpoints (staging/dev tooling)
+      - ADMIN_API_KEY=dev-admin-key
+      - PAYMENTS_PROVIDER=nowpayments
+      - DEV_WEBHOOK_KEY=test-dev-webhook-key
     ports:
       - "9000:9000"
     depends_on:
@@ -62,7 +71,8 @@ services:
       - ./frontend:/app
     environment:
       - NODE_ENV=development
-      - TARGET_ENV=dev
+      # Point frontend at local backend for E2E/dev (see frontend/src/utils/index.ts)
+      - TARGET_ENV=local
     ports:
       - "8080:8080"
     depends_on:

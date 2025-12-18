@@ -29,8 +29,13 @@
     "git:status": "bash scripts/git-tree-status.sh",
     "git:submodules:init": "git submodule update --init --recursive",
     "git:submodules:sync": "git submodule sync --recursive && git submodule update --init --recursive",
-    "git:submodules:status": "git submodule status --recursive"
+    "git:submodules:status": "git submodule status --recursive",
+    "e2e:install": "cd e2e && npm install",
+    "e2e": "cd e2e && npx playwright test",
+    "e2e:headed": "cd e2e && npx playwright test --headed",
+    "e2e:codegen": "cd e2e && npx playwright codegen http://localhost:8080"
   },
+  
   "keywords": [],
   "author": "",
   "license": "ISC",

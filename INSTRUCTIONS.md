@@ -79,6 +79,26 @@ Recent Context (Highly Recommended Reads)
 - Batch analysis + cooldown unification: `context-dumps/2025-12-09_batch-analysis-unification.md`
 - Prod UI/auth/leaderboard hotfixes: `context-dumps/2025-12-09_prod-game-ui-hotfix.md`
 
+Dev Simulator (Deterministic Streams)
+- Endpoints (NODE_ENV!=production; gated by `DEV_SIMULATOR`, default true):
+  - `POST /admin/dev/advance-move` — Body: `{ game_id, san, white_time?, black_time? }`
+  - `POST /admin/dev/simulate-game` — Body: `{ game_id, san_moves: string[], interval_ms?: number, final_result?: 'white_win'|'black_win'|'draw' }`
+  - `POST /admin/dev/stop-simulate` — Body: `{ game_id }`
+- Behavior:
+  - Applies moves using chess.js, emits `new_move` and a lightweight `new_odds` (material-heuristic WDL + top 3 moves), and on completion sets `game_over` and resolves WDL.
+  - Use `DEV_SIMULATOR=false` to disable these in dev/staging as needed.
+
+E2E (Playwright)
+- Run locally (headed): `npm run e2e:headed -- --workers=1 --debug`
+- Run locally (CI-like): `npm run e2e`
+- Tests live under `e2e/tests/` and include:
+  - Auth + Wallet (faucet), Arcade WDL, Arcade Move, Real WDL, Deposit mock, and a sample stream demo.
+- Dev deposit mock: provider defaults to NOWPayments in dev; mock webhook key defaults to `test-dev-webhook-key` if `DEV_WEBHOOK_KEY` is unset.
+- Sample sequences: `e2e/assets/sample_sequences.json` (e.g., Scholar’s Mate). Demo uses these sequences with ~400ms move spacing.
+
+CI
+- A GitHub Actions workflow (`.github/workflows/e2e.yml`) starts the stack with Docker Compose, installs Playwright + browsers, runs the E2E suite, and uploads artifacts on failure.
+
 Gotchas and Tips
 - Analysis endpoints can 429 under load; the FE already backs off. Avoid adding parallel analysis sources.
 - Leaderboard global routes may be absent in some envs; FE has a backoff and feature flag.
