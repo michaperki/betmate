@@ -25,6 +25,7 @@ Key Concepts (Modes + Settlement)
     - WDL: Arcade uses fixed odds stored at bet-time; Real is parimutuel with rake.
     - Move: Arcade uses fixed odds stored at bet-time (no refunds on “no winners”); Real is parimutuel with rake and refunds if no one bet the correct move.
   - Winnings virtual: see model getter: `backend/src/models/wager_model.ts:106`.
+  - House rake ledger (Real move settlements): per-move rake recorded to `backend/src/models/house_ledger_model.ts` via service from `resolve_bets.ts` (best-effort, non-blocking).
 
 Wagers, Odds, and Analysis
 - Wager creation (backend): `backend/src/controllers/wager_controller.ts:50`
@@ -48,6 +49,7 @@ Feature Flags and Environment
   - `ENABLE_RATE_LIMITING`: enables selective limiter on `/auth` and `/analysis` (`backend/src/server.ts:112`).
   - `POOL_RAKE`: rake fraction for Real parimutuel settlement (see `resolve_bets.ts`).
   - `ARCADE_MOVE_MARGIN`: house margin (0–0.25) applied to Arcade move odds (default 0.08).
+  - `ARCADE_DELTA_T1|ARCADE_DELTA_T2|ARCADE_DELTA_T3`: optional thresholds (centipawns) for Arcade Δ→p buckets (defaults 30/80/200).
   - `ARCADE_MAX_STAKE_MOVE`, `ARCADE_MAX_STAKE_WDL`: client stake caps enforced server-side.
 - Frontend
   - `TARGET_ENV=prod|dev` and `DISABLE_GLOBAL_LEADERBOARD` default: `frontend/src/utils/config.ts`
