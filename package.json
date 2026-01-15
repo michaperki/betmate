@@ -36,7 +36,6 @@
     "e2e:headed": "cd e2e && npx playwright test --headed",
     "e2e:codegen": "cd e2e && npx playwright codegen http://localhost:8080"
   },
-  
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -44,6 +43,7 @@
     "concurrently": "^9.1.2"
   },
   "dependencies": {
+    "chess": "^1.5.1",
     "node-fetch": "^2.7.0"
   }
 }
