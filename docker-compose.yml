@@ -46,6 +46,7 @@ services:
       - MONGODB_URI=mongodb://mongo:27017/betmate
       - MICROSERVICE_URL=http://microservice:8000/dev
       - MICROSERVICE_API_KEY=local-microservice-key
+      - OPENING_BOOK_PATH=/app/src/assets/eco
       # Enable Real mode + faucet for local E2E/dev
       - FEATURE_REAL_MODE=true
       - ENABLE_FAUCET=true
