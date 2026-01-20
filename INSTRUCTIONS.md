@@ -110,6 +110,56 @@ E2E (Playwright)
 - Dev deposit mock: provider defaults to NOWPayments in dev; mock webhook key defaults to `test-dev-webhook-key` if `DEV_WEBHOOK_KEY` is unset.
 - Sample sequences: `e2e/assets/sample_sequences.json` (e.g., Scholar’s Mate). Demo uses these sequences with ~400ms move spacing.
 
+UI Screenshot Capture (Playwright)
+- Purpose: deterministically capture full‑page and component crops at desktop, tablet, and mobile sizes for rapid UI review and visual checks.
+- Scripts:
+  - Install deps once: `npm run e2e:install`
+  - Set backend URL (if not default `http://localhost:9000`):
+    - PowerShell: `$env:E2E_BACKEND_URL='http://localhost:9000'`
+    - bash/zsh: `export E2E_BACKEND_URL=http://localhost:9000`
+  - Choose a tag to organize outputs: `$env:CAPTURE_TAG='baseline'`
+  - Run capture: `npm run e2e:capture`
+  - Zip artifact (capture + zip): `npm run e2e:capture:zip`
+- What the spec does (e2e/tests/visual-capture.spec.ts):
+  - Authenticates a fresh test user via API (no UI flakiness).
+  - Best‑effort admin promotion using the root script so admin routes render.
+  - Ensures Real balance (faucet or deposit mock) and places a small Real Draw bet to populate receipts.
+  - Auto‑dismisses onboarding overlays and masks dynamic bits (timestamps, balances, odds, etc.).
+  - Captures scenes at three sizes: desktop (1280×900), tablet (820×1180), mobile (375×812).
+- Scenes captured out‑of‑the‑box:
+  - Dashboard (home), Featured drawer (`/matches/:id`), Wallet, Active Bets, Betting History, User.
+  - Chess (Arcade + Real): full page, board frame, move tiles, notation rail, receipts, bottom toolbar.
+  - Auth forms (guest context): Sign In, Sign Up.
+  - Admin (best effort): Admin Home, Wallet, Ops, KYC, Risk.
+- Outputs:
+  - Images: `e2e/captures/<tag>/{desktop,tablet,mobile}/*.png`
+  - Manifest: `e2e/captures/<tag>/index.json`
+  - Zip: `e2e/captures/<tag>.zip`
+  - Note: `e2e/captures/` is git‑ignored.
+- Env knobs:
+  - `E2E_BACKEND_URL` (backend base URL; default `http://localhost:9000`)
+  - `E2E_BASE_URL` (frontend base URL; default `http://localhost:8080`)
+  - `E2E_ADMIN_KEY` (admin key for feature/admin endpoints; defaults to `dev-admin-key`; also auto‑loaded from `backend/.env.local` when present)
+  - `CAPTURE_TAG` (output folder/zip tag)
+- CI: `.github/workflows/e2e.yml` runs the capture spec after tests and uploads `ui-captures` artifacts on every run.
+- Troubleshooting:
+  - “socket hang up” to `/admin/features`: set `E2E_BACKEND_URL` and/or `E2E_ADMIN_KEY` correctly; the capture will continue without admin toggles.
+  - Mode toggle not found: the spec falls back to proceeding; ensure dashboard `/` is reachable so the toggle exists.
+  - If Real mode is disabled, Real receipts may be empty; this is expected.
+
+Using the Capture Tool in the AI workflow
+- When proposing or implementing a UI change:
+  - Make a focused patch in FE/BE as needed.
+  - Run captures with a descriptive tag (e.g., `CAPTURE_TAG='move-tiles-contrast'`).
+  - Review key outputs: `dashboard.full.png`, `game.arcade.full.png`, `game.real.full.png`, `wallet.full.png`, and relevant admin pages.
+  - Iterate until visuals match intent; keep changes minimal and aligned with existing styles.
+- Adding scenes or crops:
+  - Edit `e2e/tests/visual-capture.spec.ts` and use `sectionShot('<selector>', 'path.png', 'Note')` with stable selectors (prefer `data-testid`/`data-tour-id`).
+  - Update `MASK_SELECTORS` if new dynamic elements appear (timestamps, balances, counts).
+- Safety:
+  - Do not commit images; rely on local/CI artifacts.
+  - Keep viewport list small (3 sizes) to balance coverage and runtime.
+
 CI
 - A GitHub Actions workflow (`.github/workflows/e2e.yml`) starts the stack with Docker Compose, installs Playwright + browsers, runs the E2E suite, and uploads artifacts on failure.
 

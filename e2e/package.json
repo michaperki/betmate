@@ -5,10 +5,12 @@
   "scripts": {
     "postinstall": "npx playwright install",
     "test": "playwright test",
-    "codegen": "playwright codegen ${E2E_BASE_URL:-http://localhost:8080}"
+    "codegen": "playwright codegen ${E2E_BASE_URL:-http://localhost:8080}",
+    "zip:capture": "node ./scripts/zip-captures.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
+    "archiver": "^6.0.2",
     "typescript": "^5.6.3"
   }
 }

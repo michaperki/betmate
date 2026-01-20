@@ -47,6 +47,17 @@ jobs:
         run: |
           npx playwright test -c playwright.config.ts --reporter=list
 
+      - name: Run UI capture (3 sizes)
+        if: always()
+        env:
+          E2E_BACKEND_URL: http://localhost:9000
+          DEV_WEBHOOK_KEY: test-dev-webhook-key
+          ADMIN_API_KEY: dev-admin-key
+          DEV_SIMULATOR: true
+        working-directory: e2e
+        run: |
+          npx playwright test -c playwright.config.ts tests/visual-capture.spec.ts --reporter=list || true
+
       - name: Upload Playwright artifacts on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -56,3 +67,9 @@ jobs:
             e2e/test-results
             e2e/playwright-report
 
+      - name: Upload UI captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-captures
+          path: e2e/captures

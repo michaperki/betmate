@@ -50,3 +50,6 @@ TEST_ADD.txt
 
 # Loose local markdown notes not intended for version control
 CURRENCIES.md
+
+# Playwright UI captures (not tracked)
+e2e/captures/

@@ -34,6 +34,32 @@ Quick start
    - Headed/debug: npm run e2e:headed
    - Codegen:      npm run e2e:codegen
 
+UI screenshots (capture)
+- What it does: loads key routes (Dashboard, Wallet, Game UI) and saves full-page and component crops at three sizes (desktop, tablet, mobile) with dynamic bits masked.
+
+1) Start the stack (or ensure it’s running):
+   docker-compose up -d
+
+2) Install e2e deps (once):
+   npm run e2e:install
+
+3) Capture screenshots:
+   npm run e2e:capture
+
+   Options:
+   - Headed: npm run e2e:capture:headed
+   - Custom tag for output dir: CAPTURE_TAG=my-branch npm run e2e:capture
+   - Zip artifact: (run after a capture) npm run zip:capture --prefix e2e
+
+Outputs
+- Saved under e2e/captures/<tag> with per-size folders.
+- A manifest JSON is written to e2e/captures/<tag>/index.json.
+
+Notes
+- Captures are git-ignored by default (see repo .gitignore).
+- The capture spec creates or fetches a sample game automatically.
+ - Capture now authenticates via API for reliable NavBar/balance state and, in Real mode, places a small Draw bet (after ensuring balance) so receipts are visible.
+
    Smoke subset:
    - Tag filtering: npx playwright test -g "@smoke"
    - We tag: auth+wallet, deposit mock, Arcade WDL settlement, Real WDL settlement.

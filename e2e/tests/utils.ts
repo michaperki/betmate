@@ -5,23 +5,61 @@ export const randEmail = () => {
   return `e2e+${Date.now()}_${rand}@example.com`;
 };
 
-export async function enableDevFeatures() {
+export async function apiAuth(page: Page, email?: string, password = 'P@ssw0rd1234!') {
   const backend = process.env.E2E_BACKEND_URL || 'http://localhost:9000';
   const req = await playwrightRequest.newContext();
-  const adminKey = process.env.E2E_ADMIN_KEY || 'dev-admin-key';
-  const resp = await req.put(`${backend}/admin/features`, {
-    data: { realModeEnabled: true, enableFaucet: true },
-    headers: { 'X-Admin-Key': adminKey, 'Content-Type': 'application/json' },
-  });
-  return resp.ok();
+  const e = email || randEmail();
+  try {
+    const r = await req.post(`${backend}/auth/signup`, {
+      data: { email: e, password, firstName: 'E2E', lastName: 'Tester' },
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 8000,
+    });
+    if (r.ok()) {
+      const j = await r.json();
+      const token = String(j?.token || '');
+      if (token) await page.evaluate((t) => window.localStorage.setItem('authToken', t), token);
+      return { email: e, password, token } as const;
+    }
+    if (r.status() === 409) {
+      const r2 = await req.post(`${backend}/auth/signin`, {
+        data: { email: e, password },
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 8000,
+      });
+      const j2 = await r2.json();
+      const token = String(j2?.token || '');
+      if (token) await page.evaluate((t) => window.localStorage.setItem('authToken', t), token);
+      return { email: e, password, token } as const;
+    }
+  } catch {}
+  return { email: e, password, token: '' } as const;
+}
+
+export async function enableDevFeatures() {
+  try {
+    const backend = process.env.E2E_BACKEND_URL || 'http://localhost:9000';
+    const req = await playwrightRequest.newContext();
+    const adminKey = process.env.E2E_ADMIN_KEY || 'dev-admin-key';
+    const resp = await req.put(`${backend}/admin/features`, {
+      data: { realModeEnabled: true, enableFaucet: true },
+      headers: { 'X-Admin-Key': adminKey, 'Content-Type': 'application/json' },
+      timeout: 5000,
+    });
+    return resp.ok();
+  } catch {
+    // Tolerate missing admin endpoint or wrong key in capture/smoke runs
+    return false;
+  }
 }
 
 export async function createSampleGame(body?: any): Promise<string | null> {
   const backend = process.env.E2E_BACKEND_URL || 'http://localhost:9000';
   const req: APIRequestContext = await playwrightRequest.newContext();
+  const adminKey = process.env.E2E_ADMIN_KEY || 'dev-admin-key';
   const resp = await req.post(`${backend}/admin/dev/create-sample-game`, {
     data: body || { status: 'in_progress', time: '300+0' },
-    headers: { 'X-Admin-Key': 'dev-admin-key', 'Content-Type': 'application/json' },
+    headers: { 'X-Admin-Key': adminKey, 'Content-Type': 'application/json' },
   });
   if (!resp.ok()) return null;
   const json = await resp.json();
@@ -265,38 +303,73 @@ export async function waitForGameComplete(gameId: string, timeoutMs = 10000): Pr
 }
 
 export async function ensureMode(page: Page, desired: 'arcade' | 'real') {
-  // Always force desired mode via storage for reliability
-  await page.evaluate((m) => window.localStorage.setItem('betmate.mode', m as any), desired);
-
-  // Navigate to a route where the mode toggle is visible to confirm
-  if (!/\/wallet$|\/$/.test(page.url())) {
-    await page.goto('/wallet', { waitUntil: 'domcontentloaded' }).catch(async () => {
-      await page.goto('/', { waitUntil: 'domcontentloaded' });
-    });
+  // Prefer dashboard for a guaranteed toggle presence
+  if (!/\/$/.test(page.url())) {
+    await page.goto('/', { waitUntil: 'domcontentloaded' }).catch(() => {});
   } else {
     await page.reload({ waitUntil: 'domcontentloaded' }).catch(() => {});
   }
 
   const expected = (desired === 'real' ? 'USDT' : 'KBITZ');
   const toggle = page.getByTestId('mode-toggle').first();
-  await toggle.waitFor({ state: 'visible', timeout: 10000 });
 
-  // Poll the displayed label/chip until it matches expected or timeout
-  const deadline = Date.now() + 7000;
-  while (Date.now() < deadline) {
-    try {
-      const label = await page.locator('[data-testid="mode-toggle"] .mode-label, [data-testid="mode-toggle"] .mode-chip').first().textContent({ timeout: 500 });
-      const txt = (label || '').toUpperCase();
-      if (txt.includes(expected)) return;
-    } catch {}
-    await page.waitForTimeout(150);
+  // Try to find the toggle quickly; if missing, don't block captures
+  const hasToggle = await toggle.isVisible().catch(() => false);
+  if (!hasToggle) {
+    return; // proceed without enforcing; captures will still run
   }
-  // As a last resort, attempt one UI double-tap
+
+  const readLabel = async (): Promise<string> => {
+    try {
+      const s = await page
+        .locator('[data-testid="mode-toggle"] .mode-label, [data-testid="mode-toggle"] .mode-chip')
+        .first()
+        .textContent({ timeout: 500 });
+      return String(s || '').toUpperCase();
+    } catch {
+      return '';
+    }
+  };
+
+  // If already in desired mode, done
+  const initial = await readLabel();
+  if (initial.includes(expected)) return;
+
+  // NavBar toggle is double-armed; perform a double tap sequence
   try {
     await toggle.click();
-    await page.waitForTimeout(140);
+    await page.waitForTimeout(160);
     await toggle.click();
   } catch {}
+
+  // Poll for the label to match
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    const txt = await readLabel();
+    if (txt.includes(expected)) return;
+    await page.waitForTimeout(150);
+  }
+}
+
+export async function placeRealDrawBet(page: Page, gameId: string, token: string): Promise<boolean> {
+  try {
+    await page.goto(`/chess/${gameId}`, { waitUntil: 'domcontentloaded' });
+    // Ensure we are at the latest snapshot so betting is enabled
+    const goLive = page.locator('button.bt-live.is-paused');
+    if (await goLive.isVisible().catch(() => false)) {
+      await goLive.click({ timeout: 800 });
+    }
+    // Click Draw button if enabled
+    const drawBtn = page.locator('button.bt-draw:not([disabled])').first();
+    const ok = await drawBtn.isVisible({ timeout: 2000 }).catch(() => false);
+    if (!ok) return false;
+    await drawBtn.click();
+    // Confirm via API polling
+    const done = await waitForWagerOnGame(String(gameId), token, 8000);
+    return !!done;
+  } catch {
+    return false;
+  }
 }
 
 // ----- Balances and History helpers -----

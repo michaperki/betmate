@@ -34,7 +34,11 @@
     "e2e:install": "cd e2e && npm install",
     "e2e": "cd e2e && npx playwright test",
     "e2e:headed": "cd e2e && npx playwright test --headed",
-    "e2e:codegen": "cd e2e && npx playwright codegen http://localhost:8080"
+    "e2e:codegen": "cd e2e && npx playwright codegen http://localhost:8080",
+    "e2e:capture": "cd e2e && npx playwright test tests/visual-capture.spec.ts",
+    "e2e:capture:headed": "cd e2e && npx playwright test tests/visual-capture.spec.ts --headed"
+    ,
+    "e2e:capture:zip": "cd e2e && npx playwright test tests/visual-capture.spec.ts && npm run zip:capture"
   },
   "keywords": [],
   "author": "",
