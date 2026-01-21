@@ -48,25 +48,31 @@ test('Toggle to Real, faucet credit, place WDL bet, settle deterministically @sm
     if (!token2) test.skip(true, 'No auth token');
     const pre = await getUserBalances(token2);
     await page.goto(`/chess/${gameId}`);
-    await page.waitForSelector('.move-outcome-rail-column', { timeout: 5000 });
-    let whiteBtn = page.locator('button.move-outcome-rail__button--white:not([disabled])');
-    let blackBtn = page.locator('button.move-outcome-rail__button--black:not([disabled])');
+    // Ensure we are live at the latest snapshot so betting is enabled
+    const goLive = page.locator('button.bt-live.is-paused');
+    if (await goLive.isVisible().catch(() => false)) {
+      await goLive.click().catch(() => {});
+    }
+    // Use header outcome actions instead of legacy WDL panel
+    await page.waitForSelector('.board-header.outcome-action', { timeout: 15000 });
+    let whiteBtn = page.locator('.board-header.outcome-action[aria-label="Bet on White"]').first();
+    let blackBtn = page.locator('.board-header.outcome-action[aria-label="Bet on Black"]').first();
     if ((await whiteBtn.count()) === 0 && (await blackBtn.count()) === 0) {
       // If both disabled (insufficient balance or wrong mode), faucet again and retry once
       await page.goto('/wallet');
       const faucetBtn2 = page.getByTestId('wallet-faucet-btn');
       if (await faucetBtn2.count()) { await faucetBtn2.click().catch(() => {}); }
       await page.goto(`/chess/${gameId}`);
-      await page.waitForSelector('.move-outcome-rail-column', { timeout: 15000 });
-      whiteBtn = page.locator('button.move-outcome-rail__button--white:not([disabled])');
-      blackBtn = page.locator('button.move-outcome-rail__button--black:not([disabled])');
+      const goLive2 = page.locator('button.bt-live.is-paused');
+      if (await goLive2.isVisible().catch(() => false)) { await goLive2.click().catch(() => {}); }
+      whiteBtn = page.getByRole('button', { name: /Bet on White/i });
+      blackBtn = page.getByRole('button', { name: /Bet on Black/i });
     }
     let chosen: 'white_win' | 'black_win' | null = null;
     if (await whiteBtn.count()) { await whiteBtn.first().click(); chosen = 'white_win'; }
     else if (await blackBtn.count()) { await blackBtn.first().click(); chosen = 'black_win'; }
     else test.skip(true, 'No enabled outcome buttons');
-    const successEither = page.locator('button.move-outcome-rail__button.state-success');
-    await successEither.first().waitFor({ state: 'visible', timeout: 1500 }).catch(() => {});
+    // UI success indicator varies across themes; rely on API confirmation below
 
     // Verify wager recorded via API (more reliable than UI timing)
     // token2 already obtained above

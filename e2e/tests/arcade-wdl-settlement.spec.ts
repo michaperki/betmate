@@ -32,16 +32,26 @@ test('Place Arcade WDL bet, simulate outcome, verify token balance credit @smoke
     // Arcade mode and pre-bet token balance
     await ensureMode(page, 'arcade');
     await page.goto(`/chess/${gameId}`);
+    // Ensure we are live at the latest snapshot so betting is enabled
+    const goLive = page.locator('button.bt-live.is-paused');
+    if (await goLive.isVisible().catch(() => false)) {
+      await goLive.click().catch(() => {});
+    }
     const pre = await getUserBalances(token);
     expect(pre).not.toBeNull();
 
-    // Choose white if enabled, else black
-    await page.waitForSelector('.move-outcome-rail-column', { timeout: 10000 });
-    const whiteBtn = page.locator('button.move-outcome-rail__button--white:not([disabled])').first();
-    const blackBtn = page.locator('button.move-outcome-rail__button--black:not([disabled])').first();
+    // Choose white if enabled, else black using header outcome actions
+    // Wait for outcome header actions to render
+    await page.waitForSelector('.board-header.outcome-action', { timeout: 15000 });
+    const whiteBtn = page.locator('.board-header.outcome-action[aria-label="Bet on White"]').first();
+    const blackBtn = page.locator('.board-header.outcome-action[aria-label="Bet on Black"]').first();
+    const anyHeader = await Promise.race([
+      whiteBtn.waitFor({ state: 'visible', timeout: 12000 }).then(() => 'white').catch(() => null),
+      blackBtn.waitFor({ state: 'visible', timeout: 12000 }).then(() => 'black').catch(() => null),
+    ]);
     let chosen: 'white_win' | 'black_win' | null = null;
-    if (await whiteBtn.count()) { await whiteBtn.click(); chosen = 'white_win'; }
-    else if (await blackBtn.count()) { await blackBtn.click(); chosen = 'black_win'; }
+    if (anyHeader === 'white' && await whiteBtn.isVisible().catch(() => false)) { await whiteBtn.click(); chosen = 'white_win'; }
+    else if (anyHeader === 'black' && await blackBtn.isVisible().catch(() => false)) { await blackBtn.click(); chosen = 'black_win'; }
     else test.skip(true, 'No enabled WDL outcome buttons in Arcade');
 
     // Verify wager recorded via API (with UI fallback)
