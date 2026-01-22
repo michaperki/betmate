@@ -35,10 +35,15 @@
     "e2e": "cd e2e && npx playwright test",
     "e2e:headed": "cd e2e && npx playwright test --headed",
     "e2e:codegen": "cd e2e && npx playwright codegen http://localhost:8080",
-    "e2e:capture": "cd e2e && npx playwright test tests/visual-capture.spec.ts",
-    "e2e:capture:headed": "cd e2e && npx playwright test tests/visual-capture.spec.ts --headed"
-    ,
-    "e2e:capture:zip": "cd e2e && npx playwright test tests/visual-capture.spec.ts && npm run zip:capture"
+    "e2e:capture": "cd e2e && npx playwright test tests/visual-capture-modular.spec.ts",
+    "e2e:capture:headed": "cd e2e && npx playwright test tests/visual-capture-modular.spec.ts --headed",
+    "e2e:capture:legacy": "cd e2e && npx playwright test tests/visual-capture.spec.ts",
+    "e2e:capture:zip": "cd e2e && npx playwright test tests/visual-capture-modular.spec.ts && npm run zip:capture",
+    "e2e:capture:report": "cd e2e && npm run capture:report",
+    "e2e:capture:core": "cd e2e && npm run capture:core-ui",
+    "e2e:capture:dashboard": "cd e2e && npm run capture:dashboard",
+    "e2e:capture:game": "cd e2e && npm run capture:game",
+    "e2e:capture:admin": "cd e2e && npm run capture:admin"
   },
   "keywords": [],
   "author": "",

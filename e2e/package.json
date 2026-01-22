@@ -6,7 +6,15 @@
     "postinstall": "npx playwright install",
     "test": "playwright test",
     "codegen": "playwright codegen ${E2E_BASE_URL:-http://localhost:8080}",
-    "zip:capture": "node ./scripts/zip-captures.js"
+    "zip:capture": "node ./scripts/zip-captures.js",
+    "capture": "playwright test tests/visual-capture-modular.spec.ts",
+    "capture:headed": "playwright test tests/visual-capture-modular.spec.ts --headed",
+    "capture:core-ui": "playwright test tests/capture/core-ui.spec.ts",
+    "capture:dashboard": "playwright test tests/capture/dashboard.spec.ts",
+    "capture:game": "playwright test tests/capture/game-experience.spec.ts",
+    "capture:admin": "playwright test tests/capture/admin.spec.ts",
+    "capture:theme": "playwright test tests/capture/theme-ui.spec.ts",
+    "capture:report": "node ./scripts/generate-capture-report.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1",
