@@ -46,6 +46,16 @@ services:
       - MONGODB_URI=mongodb://mongo:27017/betmate
       - MICROSERVICE_URL=http://microservice:8000/dev
       - MICROSERVICE_API_KEY=local-microservice-key
+      - OPENING_BOOK_PATH=/app/src/assets/eco
+      # Enable Real mode + faucet for local E2E/dev
+      - FEATURE_REAL_MODE=true
+      - ENABLE_FAUCET=true
+      # Allow faucet without admin key in local/dev (never use in prod)
+      - FAUCET_REQUIRE_ADMIN_KEY=false
+      # Optional: admin key for admin endpoints (staging/dev tooling)
+      - ADMIN_API_KEY=dev-admin-key
+      - PAYMENTS_PROVIDER=nowpayments
+      - DEV_WEBHOOK_KEY=test-dev-webhook-key
     ports:
       - "9000:9000"
     depends_on:
@@ -62,7 +72,8 @@ services:
       - ./frontend:/app
     environment:
       - NODE_ENV=development
-      - TARGET_ENV=dev
+      # Point frontend at local backend for E2E/dev (see frontend/src/utils/index.ts)
+      - TARGET_ENV=local
     ports:
       - "8080:8080"
     depends_on:
@@ -92,8 +103,17 @@ services:
       - TIME_LIMIT=1.0
       - HASH_SIZE=128
       - STOCKFISH_PATH=/var/task/assets/stockfish_linux
+      # Optional LC0 (Leela) integration. Provide lc0 binary + weights in ./microservice/assets
+      # and set ENGINE_PROVIDER=lc0 to enable blending with time tables.
+      - ENGINE_PROVIDER=${ENGINE_PROVIDER:-stockfish}
+      - LILA_ENGINE_PATH=${LILA_ENGINE_PATH:-/var/task/assets/lc0}
+      - LILA_WEIGHTS_PATH=${LILA_WEIGHTS_PATH:-/var/task/assets/weights.pb}
+      - LILA_BACKEND=${LILA_BACKEND:-blas}
+      - ENABLE_ENGINE_WDL_BLEND=${ENABLE_ENGINE_WDL_BLEND:-true}
+      - ENGINE_WDL_BASE_WEIGHT=${ENGINE_WDL_BASE_WEIGHT:-0.6}
+      - ENGINE_WDL_MAX_WEIGHT=${ENGINE_WDL_MAX_WEIGHT:-0.9}
     volumes:
-      - ./microservice/assets:/app/assets
+      - ./microservice/assets:/var/task/assets
     networks:
       - betmate-network
 
@@ -117,7 +137,7 @@ services:
       - HASH_SIZE=64
       - STOCKFISH_PATH=/var/task/assets/stockfish_linux
     volumes:
-      - ./microservice/assets:/app/assets
+      - ./microservice/assets:/var/task/assets
     deploy:
       resources:
         limits:

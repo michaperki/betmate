@@ -1,0 +1,7 @@
+version: '3.8'
+
+services:
+  microservice:
+    # Do not expose microservice externally during capture runs to avoid local port conflicts
+    ports: []
+
