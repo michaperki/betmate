@@ -4,9 +4,9 @@ Overview
 - Goal: Migrate to the new mock‑first UI while keeping production functionality stable. This guide documents the strangler approach, what’s shipped, what remains, and how to safely extend or port features.
 
 Status Summary (2026‑01‑25)
-- Migration complete: All primary routes now use the new UI components
-- Components have been moved from experimental/ to their proper directories
-- "Mock" prefixes removed from component names
+- Migration complete: all primary routes now use the new UI components
+- experimental/ directory has been removed from the bundle; pages have been ported to containers
+- "Mock" prefixes removed from component names; header modals are canonical
 - Auth + onboarding aligned with token-aware redirects; login reuses backend auth
 - Clocks, receipts, and profile dropdown integrated in the header
 - Mobile-friendly header design with simplified layout
@@ -18,14 +18,14 @@ Status Summary (2026‑01‑25)
 
 Migration Status
 - All new pages have been moved from `frontend/src/experimental/` to proper component directories.
-  - `frontend/src/components/app.tsx` routes:
-    - `/` → `Dashboard` (formerly NewDashboard)
-    - `/chess/:id` and `/matches/:id` → `GameContainer` (formerly NewGameContainer)
-    - `/bets` → `MyBets` (formerly NewMyBets)
-    - `/stats` → `Stats` (formerly NewStats)
-    - `/signin`, `/signup` → `Login` (formerly MockLogin)
-    - `/user` → `Settings` (formerly NewSettings)
-    - `/onboarding` → `Onboarding` (formerly NewOnboarding)
+  - `frontend/src/components/app.tsx` routes (canonical):
+    - `/` → `containers/Dashboard`
+    - `/chess/:id`, `/matches/:id`, `/chess/featured` → `containers/GameContainer`
+    - `/bets` → `containers/MyBets`
+    - `/stats` → `containers/Stats`
+    - `/signin`, `/signup` → `containers/Login`
+    - `/user` → `containers/Settings`
+    - `/onboarding` → `containers/Onboarding`
   - Auth hydration suppresses guest flicker when a token exists.
 - Legacy pages have been removed or are no longer referenced in the codebase.
 
@@ -61,6 +61,7 @@ Wagering, Pricing, and Settlement
   - Requests are de‑duplicated and respect 429 cooldowns; receipts reconcile in real‑time via websocket updates.
     - `frontend/src/store/requests/*`
     - `frontend/src/store/reducers/wagerReducer.ts`
+  - Hooks naming: canonical hooks are `useDashboardData`, `useMyBetsData`, `useStatsData`. Backwards‑compat named exports (`useNew*`) remain but should not be used in new code.
 
 Balances Migration (`account` → `token_balance`)
 - Backend debits Arcade from `token_balance` (initializing from legacy `account` if missing) and keeps `account` in sync during migration.
@@ -80,7 +81,8 @@ Dev Examples & Previews
   - Sources: `frontend/src/examples/*`
 
 Pitfalls & Guardrails
-- The migration from mock-first components is complete, and all new features should use the proper components.
+- The migration from mock-first components is complete; use canonical containers/components only.
+- Imports of `experimental/*`, `Mock*`, and `New*` component paths are blocked by ESLint; examples are allowed under `src/examples/**`.
 - Do not introduce duplicate pricing logic in the client; trust server‑side odds.
 - Maintain balance consistency: prefer `token_balance`; if updating legacy `account` during transition, mirror precisely.
 - Keep analysis requests batched and de‑duplicated; respect cooldowns to avoid 429s.
@@ -98,3 +100,6 @@ References
 - INSTRUCTIONS: `INSTRUCTIONS.md`
 - Context dumps: `context-dumps/2026-01-24_featured-selector_and_new-ui-swap.md`, `context-dumps/2026-01-24_mock-auth-login-dropdown_context-dump.md`
 
+Appendix — Renames for clarity
+- NewGameContainer → GameContainer (`frontend/src/containers/GameContainer`)
+- NewChessboard → Chessboard (`frontend/src/components/Chessboard`)

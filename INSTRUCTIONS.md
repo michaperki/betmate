@@ -7,7 +7,7 @@ Quick Start
 - Read these first (in order):
   - CURRENCIES and betting modes: `CURRENCIES.md`
   - Release process (submodules + tags): `RELEASING.md`
-  - Migration guide (mock‑first strangler plan): `MIGRATION.md`
+  - Migration guide (mock‑first strangler plan, now complete): `MIGRATION.md`
   - Recent operational context: `context-dumps/README.md` and the latest dated files in `context-dumps/`
 - Run locally (Docker Compose):
   - Requires Docker. From repo root: `docker-compose up --build`
@@ -169,6 +169,7 @@ Gotchas and Tips
 - Leaderboard global routes may be absent in some envs; FE has a backoff and feature flag.
 - “No winners” for a move pool currently refunds stakes (CANCELLED) rather than “house keeps”. Decide policy before changing settlement.
 - `account` and `token_balance` coexist for back-compat; prefer `token_balance` going forward. FE reducer still adjusts `account` optimistically.
+ - UI migration is complete and the `experimental/` directory has been removed from the bundle. Do not import from `experimental/*`, `Mock*`, or `/New*` component paths (ESLint enforces this outside `src/examples/**`).
 
 Open Items (from current plan)
 - Validate Arcade move pricing + fixed‑odds settlement in production telemetry; tune K/margin/clamps as needed.
