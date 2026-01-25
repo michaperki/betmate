@@ -3,6 +3,10 @@ version: '3.8'
 services:
   # Existing services from main docker-compose.yml remain unchanged
   
+  backend:
+    env_file:
+      - ./backend/.env.tailscale
+  
   bot-worker:
     build:
       context: ./bot-worker
