@@ -7,6 +7,7 @@ Quick Start
 - Read these first (in order):
   - CURRENCIES and betting modes: `CURRENCIES.md`
   - Release process (submodules + tags): `RELEASING.md`
+  - Migration guide (mock‑first strangler plan): `MIGRATION.md`
   - Recent operational context: `context-dumps/README.md` and the latest dated files in `context-dumps/`
 - Run locally (Docker Compose):
   - Requires Docker. From repo root: `docker-compose up --build`
@@ -18,7 +19,7 @@ Key Concepts (Modes + Settlement)
   - Arcade: token bets vs house for WDL; move bets use house-priced fixed odds (Δ→p heuristic with margin).
   - Real: cash bets parimutuel vs other players; house earns rake.
 - Where enforced/visible:
-  - UI toggle and status: `frontend/src/context/ModeContext.tsx:51` reads `GET /api/status`, and `frontend/src/components/NavBar/component.tsx:128` displays mode + balances.
+  - UI toggle and status: `frontend/src/context/ModeContext.tsx` reads `GET /api/status`, and the mode is displayed in the header (`frontend/src/components/Header/component.tsx`).
   - API status includes feature flags: `backend/src/server.ts:161` (`realModeEnabled`), pricing version: `backend/src/server.ts:163`.
 - Settlement split by mode:
   - Core settlement: `backend/src/helpers/resolve_bets.ts:42`
@@ -170,9 +171,14 @@ Gotchas and Tips
 - `account` and `token_balance` coexist for back-compat; prefer `token_balance` going forward. FE reducer still adjusts `account` optimistically.
 
 Open Items (from current plan)
-- Implement Arcade move pricing (Δ→p heuristic with house margin) and switch Arcade move settlement from pool share to fixed odds.
-- Enforce Real-mode gating on the server, and (optionally) add rake ledger entries for Real settlements.
+- Validate Arcade move pricing + fixed‑odds settlement in production telemetry; tune K/margin/clamps as needed.
+- Monitor Real move rake ledger entries and add any operator views/reporting if required.
 - Complete FE migration away from `account` toward `token_balance` everywhere balances are shown/adjusted.
+
+Developer Examples
+- Preview design‑reference prototypes at:
+  - `/examples/mobile-dashboard`, `/examples/empty-states`, `/examples/theme-toggle`, `/examples/toasts`
+  - Source: `frontend/src/examples/*`
 
 Where to Ask/Log
 - Enable debug logs when diagnosing:
