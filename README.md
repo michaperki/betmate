@@ -12,6 +12,8 @@ Admin Access
   - `export MONGODB_USERNAME="<user>"`
   - `export MONGODB_PASSWORD="<pass>"`
   - Run the same `npm run admin:promote …` command.
+ - Create an invite code (beta onboarding):
+   - `npm run admin:create-invite -- --campaign beta --max 100 --grant-bet 1000 --grant-usd 10 --yes`
 
 Notes
 - The script is implemented in `backend/scripts/promote-admin.ts` and loads `backend/.env.local`, then `backend/.env`.
