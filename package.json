@@ -31,6 +31,7 @@
     "git:submodules:sync": "git submodule sync --recursive && git submodule update --init --recursive",
     "git:submodules:status": "git submodule status --recursive",
     "admin:promote": "cd backend && npx ts-node -r tsconfig-paths/register scripts/promote-admin.ts",
+    "admin:create-invite": "cd backend && npx ts-node -r tsconfig-paths/register scripts/create-invite.ts",
     "e2e:install": "cd e2e && npm install",
     "e2e": "cd e2e && npx playwright test",
     "e2e:headed": "cd e2e && npx playwright test --headed",
