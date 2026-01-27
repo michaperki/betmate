@@ -97,8 +97,8 @@ Checklist for New Features
 - Test on both desktop and mobile form factors.
 
 References
-- INSTRUCTIONS: `INSTRUCTIONS.md`
-- Context dumps: `context-dumps/2026-01-24_featured-selector_and_new-ui-swap.md`, `context-dumps/2026-01-24_mock-auth-login-dropdown_context-dump.md`
+- INSTRUCTIONS: `../INSTRUCTIONS.md`
+- Context dumps: `../context-dumps/2026-01-24_featured-selector_and_new-ui-swap.md`, `../context-dumps/2026-01-24_mock-auth-login-dropdown_context-dump.md`
 
 Appendix — Renames for clarity
 - NewGameContainer → GameContainer (`frontend/src/containers/GameContainer`)

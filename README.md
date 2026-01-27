@@ -17,3 +17,8 @@ Notes
 - The script is implemented in `backend/scripts/promote-admin.ts` and loads `backend/.env.local`, then `backend/.env`.
 - Admin UI requires `user.role === 'admin'`. Alternatively, server endpoints can be accessed using `X-Admin-Key` if `ADMIN_API_KEY` is set, but the UI still checks the role.
 
+Documentation
+- All project docs have moved under `docs/` to keep the root clean.
+- Migration guide: `docs/migration/MIGRATION.md`
+- Frontend mock UI docs: `docs/frontend/`
+- Ops/dev notes: `docs/ops/`
