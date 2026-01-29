@@ -1,8 +1,20 @@
 #!/usr/bin/env bash
 # Aggregated Git status for root + submodules (frontend, backend, microservice)
-# Usage: bash scripts/git-tree-status.sh
+# Usage: bash scripts/git-tree-status.sh [--branches] [--fetch]
 
 set -euo pipefail
+
+# Flags (can also be set via env)
+LIST_BRANCHES=${LIST_BRANCHES:-0}
+FETCH=${FETCH:-0}
+
+for arg in "$@"; do
+  case "$arg" in
+    --branches) LIST_BRANCHES=1 ;;
+    --fetch) FETCH=1 ;;
+    --no-fetch) FETCH=0 ;;
+  esac
+done
 
 bold() { printf "\033[1m%s\033[0m" "$*"; }
 dim() { printf "\033[2m%s\033[0m" "$*"; }
@@ -28,7 +40,13 @@ ahead_behind() {
   counts=$(git rev-list --left-right --count "${upstream}...HEAD" 2>/dev/null || echo "0 0")
   local behind ahead
   read -r behind ahead <<< "$counts"
-  echo "upstream: ${upstream}, ahead: ${ahead}, behind: ${behind}"
+  local parity=""
+  if [ "$ahead" = 0 ] && [ "$behind" = 0 ]; then
+    parity=", parity: yes"
+  else
+    parity=", parity: no"
+  fi
+  echo "upstream: ${upstream}, ahead: ${ahead}, behind: ${behind}${parity}"
 }
 
 # Compare current HEAD against a provided ref (e.g., origin/release)
@@ -55,7 +73,13 @@ ahead_behind_vs() {
   counts=$(git rev-list --left-right --count "${target_ref}...HEAD" 2>/dev/null || echo "0 0")
   local behind ahead
   read -r behind ahead <<< "$counts"
-  echo "prod: ${target_ref}, ahead: ${ahead}, behind: ${behind}"
+  local parity=""
+  if [ "$ahead" = 0 ] && [ "$behind" = 0 ]; then
+    parity=", parity: yes"
+  else
+    parity=", parity: no"
+  fi
+  echo "prod: ${target_ref}, ahead: ${ahead}, behind: ${behind}${parity}"
 }
 
 # Resolve which branch should be considered "prod"
@@ -95,6 +119,22 @@ clean_status() {
   fi
 }
 
+# Summarize dirty causes in current repo
+dirty_summary() {
+  local staged unstaged untracked
+  staged=$(git diff --cached --name-only --diff-filter=ACMRT 2>/dev/null | wc -l | awk '{print $1}')
+  unstaged=$(git diff --name-only --diff-filter=ACMRT 2>/dev/null | wc -l | awk '{print $1}')
+  untracked=$(git ls-files --others --exclude-standard 2>/dev/null | wc -l | awk '{print $1}')
+  echo "staged: ${staged}, unstaged: ${unstaged}, untracked: ${untracked}"
+}
+
+# Optional: list branches (local + upstream mapping)
+list_branches() {
+  echo "  branches:"
+  git for-each-ref --format='    %(if)%(HEAD)%(then)* %(else)  %(end)%(refname:short)%(if)%(upstream)%(then) -> %(upstream:short)%(end)' refs/heads \
+    | sort
+}
+
 pointer_status() {
   local path=$1
   local line
@@ -127,6 +167,9 @@ print_section() {
   fi
 
   ( cd "$path" >/dev/null 2>&1
+    if [ "$FETCH" = 1 ]; then
+      git fetch --prune --tags --quiet || true
+    fi
     local branch
     branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "(detached)")
     local remote
@@ -149,9 +192,13 @@ print_section() {
         echo "  status: $(green 'OK (ignored)')"
       else
         echo "  status: $(red DIRTY)"
+        echo "  $(dirty_summary)"
       fi
     fi
     echo "  head: $commit"
+    if [ "$LIST_BRANCHES" = 1 ]; then
+      list_branches
+    fi
   )
   echo
 }
