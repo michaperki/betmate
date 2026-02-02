@@ -37,6 +37,7 @@
     "git:diff:prod": "bash scripts/git-diff-prod.sh",
     "admin:promote": "cd backend && npx ts-node -r tsconfig-paths/register scripts/promote-admin.ts",
     "admin:create-invite": "cd backend && npx ts-node -r tsconfig-paths/register scripts/create-invite.ts",
+    "admin:reset-db": "cd backend && npx ts-node -r tsconfig-paths/register scripts/reset-db.ts",
     "e2e:install": "cd e2e && npm install",
     "e2e": "cd e2e && npx playwright test",
     "e2e:headed": "cd e2e && npx playwright test --headed",
