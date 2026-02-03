@@ -58,3 +58,5 @@ e2e/captures/
 # Documentation: ignore Markdown across repo (keep root README)
 **/*.md
 !/README.md
+!/RELEASING.md
+!/SECURITY_REVIEW.md

@@ -26,6 +26,7 @@
     "release:app:patch": "bash scripts/release-app.sh patch",
     "release:app:minor": "bash scripts/release-app.sh minor",
     "release:app:major": "bash scripts/release-app.sh major",
+    "release:promote": "bash scripts/promote-release.sh",
     "git:status": "bash scripts/git-tree-status.sh",
     "git:status:branches": "bash scripts/git-tree-status.sh --branches",
     "git:status:fetch": "bash scripts/git-tree-status.sh --fetch",
