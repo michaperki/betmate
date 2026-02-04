@@ -2,16 +2,18 @@
 set -euo pipefail
 
 # Promote dev -> release, bump versions, tag and update submodule pointers.
-# Usage: scripts/promote-release.sh [patch|minor|major|<exact>] [--include-microservice] [--push]
+# Usage: scripts/promote-release.sh [patch|minor|major|<exact>] [--include-microservice] [--push] [--switch-back-to-dev]
 
 BUMP_SPEC="${1:-patch}"
 INCLUDE_MS=0
 DO_PUSH=0
+SWITCH_BACK=0
 
 for arg in "$@"; do
   case "$arg" in
     --include-microservice) INCLUDE_MS=1 ;;
     --push) DO_PUSH=1 ;;
+    --switch-back-to-dev) SWITCH_BACK=1 ;;
   esac
 done
 
@@ -125,3 +127,33 @@ if (( DO_PUSH )); then
   git push --follow-tags origin release || true
 fi
 
+# Optional: switch all working copies back to dev and update root pointers
+if (( SWITCH_BACK )); then
+  echo "[promote] Switching working trees back to dev"
+  # Root
+  if git show-ref --verify --quiet refs/heads/dev; then
+    git checkout dev || true
+    git pull --ff-only origin dev || true
+  fi
+  # Frontend
+  if git -C "$FRONT_DIR" show-ref --verify --quiet refs/heads/dev; then
+    git -C "$FRONT_DIR" checkout dev || true
+    git -C "$FRONT_DIR" pull --ff-only origin dev || true
+  fi
+  # Backend
+  if git -C "$BACK_DIR" show-ref --verify --quiet refs/heads/dev; then
+    git -C "$BACK_DIR" checkout dev || true
+    git -C "$BACK_DIR" pull --ff-only origin dev || true
+  fi
+  # Microservice (optional)
+  if (( INCLUDE_MS )); then
+    if git -C "$MS_DIR" show-ref --verify --quiet refs/heads/dev; then
+      git -C "$MS_DIR" checkout dev || true
+      git -C "$MS_DIR" pull --ff-only origin dev || true
+    fi
+  fi
+  echo "[promote] Committing root pointer updates to dev"
+  git add frontend backend microservice 2>/dev/null || git add frontend backend || true
+  git commit -m "chore: switch working trees back to dev and update pointers" || true
+  git push origin dev || true
+fi

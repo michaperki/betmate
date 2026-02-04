@@ -44,6 +44,7 @@ scripts/**
 !scripts/git-tree-status.sh
 !scripts/sync-release-to-dev.sh
 !scripts/promote-release.sh
+!scripts/switch-all-to-dev.sh
 
 # Temporary or scratch files
 tmp_style.scss

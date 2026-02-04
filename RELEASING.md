@@ -43,6 +43,8 @@ Release Procedure (Local, No CI)
      - `npm run release:promote -- patch`
    - Or push branches + tags too:
      - `npm run release:promote -- patch --push`
+   - Recommended: switch all working trees back to `dev` after promotion to avoid accidental work on `release`:
+     - `npm run release:promote -- patch --push -- --switch-back-to-dev`
    - Include microservice tagging (traceability only):
      - `npm run release:promote -- patch --include-microservice [--push]`
 
@@ -69,6 +71,15 @@ What `release:promote` does
    - `bash scripts/sync-release-to-dev.sh --fetch`
    - Follow printed push commands to update dev branches.
 
+Branch Hygiene (Important)
+- After a release promotion, always switch your working copies back to `dev` to avoid making changes on `release` by accident.
+- You can either:
+  - Pass `--switch-back-to-dev` to `release:promote` as shown above, or
+  - Run the helper:
+    - `bash scripts/promote-release.sh noop --switch-back-to-dev`
+    - Or manually: `git -C frontend checkout dev && git -C backend checkout dev && git checkout dev && git add frontend backend && git commit -m "chore: switch back to dev" && git push origin dev`
+
+
 Rollback (Fast, Local)
 - Root only: reset to previous combined tag and force‑push release:
   - `git checkout release && git reset --hard app-vPREV && git push -f origin release`
@@ -94,4 +105,3 @@ Notes
 - Scripts require clean working trees; they’ll stop if there are uncommitted changes.
 - If promoting a specific commit, cherry‑pick to `release` first, then run the script.
 - In production, always set `MICROSERVICE_URL` explicitly for the backend; avoid path guessing in code.
-
