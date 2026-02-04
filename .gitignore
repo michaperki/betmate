@@ -60,3 +60,4 @@ e2e/captures/
 !/README.md
 !/RELEASING.md
 !/SECURITY_REVIEW.md
+sendgrid.env
