@@ -57,7 +57,7 @@ ahead_behind_vs() {
     echo "prod: none"
     return 0
   fi
-  # If given a remote ref like origin/release, verify refs/remotes/origin/release
+  # Verify the target ref exists
   if [[ "$target_ref" == origin/* ]]; then
     if ! git show-ref --verify --quiet "refs/remotes/${target_ref}"; then
       echo "prod: $target_ref (not found)"
@@ -69,10 +69,29 @@ ahead_behind_vs() {
       return 0
     fi
   fi
-  local counts
-  counts=$(git rev-list --left-right --count "${target_ref}...HEAD" 2>/dev/null || echo "0 0")
-  local behind ahead
-  read -r behind ahead <<< "$counts"
+
+  # Ignore artificial operational commits when comparing prod vs dev to avoid noise
+  # Default patterns can be overridden via BETMATE_STATUS_IGNORE_REGEX (extended regex)
+  local IGNORE_RE=${BETMATE_STATUS_IGNORE_REGEX:-"^(merge\\(release->dev\\)|release\\(|chore\\(release\\):|chore\\(submodules\\):|chore: (switch working trees back to dev|update submodule pointers|update (backend|frontend) submodule pointer|bump (frontend|backend) submodule|bump frontend pointer|bump backend pointer))"}
+
+  # Count commits in each direction excluding ignored patterns; omit merges for clarity
+  local ahead behind
+  # Commits present on HEAD but not on target (dev ahead of release)
+  local ahead_list
+  ahead_list=$(git log --oneline --no-merges "${target_ref}..HEAD" 2>/dev/null || true)
+  if [ -n "$IGNORE_RE" ]; then
+    ahead_list=$(printf "%s\n" "$ahead_list" | grep -Ev "$IGNORE_RE" || true)
+  fi
+  ahead=$(printf "%s\n" "$ahead_list" | sed '/^$/d' | wc -l | awk '{print $1}')
+
+  # Commits present on target but not on HEAD (release ahead of dev)
+  local behind_list
+  behind_list=$(git log --oneline --no-merges "HEAD..${target_ref}" 2>/dev/null || true)
+  if [ -n "$IGNORE_RE" ]; then
+    behind_list=$(printf "%s\n" "$behind_list" | grep -Ev "$IGNORE_RE" || true)
+  fi
+  behind=$(printf "%s\n" "$behind_list" | sed '/^$/d' | wc -l | awk '{print $1}')
+
   local parity=""
   if [ "$ahead" = 0 ] && [ "$behind" = 0 ]; then
     parity=", parity: yes"
