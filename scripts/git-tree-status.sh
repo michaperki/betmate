@@ -169,6 +169,43 @@ pointer_status() {
   esac
 }
 
+root_prod_parity() {
+  local target_ref=$1
+  if [ -z "$target_ref" ]; then
+    echo "prod: none"
+    return 0
+  fi
+  # Collect submodule paths from .gitmodules
+  if [ ! -f .gitmodules ]; then
+    # No submodules; fall back to commit-based compare
+    ahead_behind_vs "$target_ref"
+    return 0
+  fi
+  local mismatches=0
+  # Read submodule paths in stable order
+  while IFS= read -r line; do
+    local key path
+    key=$(echo "$line" | awk '{print $1}')
+    path=$(echo "$line" | awk '{print $2}')
+    if [ -z "$path" ]; then continue; fi
+    # Resolve subtree commit at HEAD and at target ref
+    local sha_head sha_target
+    sha_head=$(git ls-tree -d HEAD -- "$path" 2>/dev/null | awk '{print $3}' | head -n1)
+    sha_target=$(git ls-tree -d "$target_ref" -- "$path" 2>/dev/null | awk '{print $3}' | head -n1)
+    if [ -n "$sha_head" ] && [ -n "$sha_target" ]; then
+      if [ "$sha_head" != "$sha_target" ]; then
+        mismatches=$((mismatches+1))
+      fi
+    fi
+  done < <(git config --file .gitmodules --get-regexp 'submodule\..*\.path' | sort)
+
+  if [ "$mismatches" -eq 0 ]; then
+    echo "prod: ${target_ref}, ahead: 0, behind: 0, parity: yes"
+  else
+    echo "prod: ${target_ref}, ahead: 0, behind: 0, parity: no (submodule pointers differ: ${mismatches})"
+  fi
+}
+
 print_section() {
   local label=$1
   local path=$2
@@ -201,7 +238,11 @@ print_section() {
     local prod_ref
     prod_ref=$(resolve_prod_ref)
     if [ -n "$prod_ref" ]; then
-      echo "  $(ahead_behind_vs "$prod_ref")"
+      if [ "$path" = "." ]; then
+        echo "  $(root_prod_parity "$prod_ref")"
+      else
+        echo "  $(ahead_behind_vs "$prod_ref")"
+      fi
     fi
     raw=$(clean_status_raw)
     if [ "$raw" = CLEAN ]; then
