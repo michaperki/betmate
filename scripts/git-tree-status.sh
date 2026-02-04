@@ -194,7 +194,18 @@ root_prod_parity() {
     sha_target=$(git ls-tree -d "$target_ref" -- "$path" 2>/dev/null | awk '{print $3}' | head -n1)
     if [ -n "$sha_head" ] && [ -n "$sha_target" ]; then
       if [ "$sha_head" != "$sha_target" ]; then
-        mismatches=$((mismatches+1))
+        # If the submodule's origin/dev and origin/release are in parity, ignore pointer diff
+        if git -C "$path" show-ref --verify --quiet refs/remotes/origin/dev \
+           && git -C "$path" show-ref --verify --quiet refs/remotes/origin/release; then
+          read -r sub_behind sub_ahead < <(git -C "$path" rev-list --left-right --count origin/release...origin/dev 2>/dev/null || echo "0 0")
+          if [ "$sub_behind" = 0 ] && [ "$sub_ahead" = 0 ]; then
+            : # ignore this mismatch
+          else
+            mismatches=$((mismatches+1))
+          fi
+        else
+          mismatches=$((mismatches+1))
+        fi
       fi
     fi
   done < <(git config --file .gitmodules --get-regexp 'submodule\..*\.path' | sort)
