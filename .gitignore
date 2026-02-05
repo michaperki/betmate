@@ -61,4 +61,5 @@ e2e/captures/
 !/README.md
 !/RELEASING.md
 !/SECURITY_REVIEW.md
+!/AGENT_LAYER_RESEARCH.md
 sendgrid.env
